@@ -14,10 +14,9 @@ CHT/CHT.C
 
 FSI/FSI.C
 FSI/Force.C
+FSI/Stress.C
 FSI/Displacement.C
 FSI/DisplacementDelta.C
-FSI/volDisplacement.C
-FSI/volDisplacementDelta.C
 
 
 Adapter.C

@@ -70,12 +70,6 @@ public:
             std::vector<std::string> patchNames,
             bool meshConnectivity
             );
-    
-    //- Return locationsType
-    std::string locationsType()
-    {
-        return locationsType_;
-    }
 
     //- Add a CouplingDataUser to read data from the interface
     void addCouplingDataReader
