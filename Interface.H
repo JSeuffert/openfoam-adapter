@@ -69,14 +69,14 @@ public:
             std::string locationsType,
             std::vector<std::string> patchNames,
             bool meshConnectivity
-            );
+    );
 
     //- Add a CouplingDataUser to read data from the interface
     void addCouplingDataReader
     (
             std::string dataName,
             CouplingDataUser * couplingDataReader
-            );
+    );
 
 
     //- Add a CouplingDataUser to write data on the interface
@@ -84,7 +84,7 @@ public:
     (
             std::string dataName,
             CouplingDataUser * couplingDataWriter
-            );
+    );
 
     //- Allocate an appropriate buffer for scalar or vector data.
     //  If at least one couplingDataUser has vector data, then

@@ -27,12 +27,9 @@ bool preciceAdapter::FSI::FluidStructureInteraction::configure(const IOdictionar
     // Check the solver type and determine it if needed
     if (
         solverType_.compare("compressible") == 0 ||
-<<<<<<< Updated upstream
         solverType_.compare("incompressible") == 0 ||
+        solverType_.compare("solid") == 0 ||
         solverType_.compare("basic") == 0
-=======
-        solverType_.compare("incompressible") == 0
->>>>>>> Stashed changes
     )
     {
         DEBUG(adapterInfo("Known solver type: " + solverType_));
@@ -62,43 +59,40 @@ bool preciceAdapter::FSI::FluidStructureInteraction::readConfig(const IOdictiona
     /* TODO: Read the names of any needed fields and parameters.
     * Include the force here?
     */
-<<<<<<< Updated upstream
     // Read the solid forces
-    if (adapterConfig["solidForces"])
+    if (adapterConfig["porousForces"])
     {
-        solidForces_ = adapterConfig["solidForces"].as<bool>();
+        porousForces_ = FSIdict.lookupOrDefault<bool>("porousForces", false);
     }
-    DEBUG(adapterInfo("    add solid forces : " + std::to_string(solidForces_)));   
-=======
->>>>>>> Stashed changes
+    DEBUG(adapterInfo("    add porous forces : " + std::to_string(porousForces_)));   
 
     // Read the name of the pointDisplacement field (if different)
-    namePointDisplacement_ = FSIdict.lookupOrDefault<word>("namePointDisplacement", "pointDisplacement");
+    if (adapterConfig["namePointDisplacement"])
+    {
+        namePointDisplacement_ = FSIdict.lookupOrDefault<word>("namePointDisplacement", "pointDisplacement");
+    }
     DEBUG(adapterInfo("    pointDisplacement field name : " + namePointDisplacement_));
-<<<<<<< Updated upstream
     
     // Read the name of the pointDisplacement field (if different)
     if (adapterConfig["nameDPointDisplacement"])
     {
-        nameDPointDisplacement_ = adapterConfig["nameDPointDisplacement"].as<std::string>();
+        nameDPointDisplacement_ = FSIdict.lookupOrDefault<word>("nameDPointDisplacement", "DpointDisplacement");
     }
     DEBUG(adapterInfo("    DpointDisplacement field name : " + nameDPointDisplacement_));
     
     // Read the name of the cellDisplacement field (if different)
     if (adapterConfig["nameCellDisplacement"])
     {
-        nameCellDisplacement_ = adapterConfig["nameCellDisplacement"].as<std::string>();
+        nameCellDisplacement_ = FSIdict.lookupOrDefault<word>("nameCellDisplacement", "cellDisplacement");
     }
     DEBUG(adapterInfo("    cellDisplacement field name : " + nameCellDisplacement_));
     
     // Read the name of the cellDisplacement field (if different)
     if (adapterConfig["nameDCellDisplacement"])
     {
-        nameDCellDisplacement_ = adapterConfig["nameDCellDisplacement"].as<std::string>();
+        nameDCellDisplacement_ = FSIdict.lookupOrDefault<word>("nameDCellDisplacement", "DcellDisplacement");
     }
     DEBUG(adapterInfo("    DcellDisplacement field name : " + nameDCellDisplacement_));
-=======
->>>>>>> Stashed changes
 
     return true;
 }
@@ -114,31 +108,12 @@ std::string preciceAdapter::FSI::FluidStructureInteraction::determineSolverType(
     dimensionSet pressureDimensionsCompressible(1, -1, -2, 0, 0, 0, 0);
     dimensionSet pressureDimensionsIncompressible(0, 2, -2, 0, 0, 0, 0);
 
-    if (mesh_.foundObject<volScalarField>("p"))
+    if (mesh_.foundObject<IOdictionary>("rheologyProperties"))
     {
-<<<<<<< Updated upstream
-        transportPropertiesExists = true;
-        DEBUG(adapterInfo("Found the transportProperties dictionary."));
-    }
-    else
-    {
-        DEBUG(adapterInfo("Did not find the transportProperties dictionary."));
-    }
-
-    
-    if (mesh_.foundObject<IOdictionary>(turbulenceModel::propertiesName))
-    {
-        turbulencePropertiesExists = true;
-        DEBUG(adapterInfo("Found the " + turbulenceModel::propertiesName
-            + " dictionary."));
-    }
-    else
-    {
-        DEBUG(adapterInfo("Did not find the " + turbulenceModel::propertiesName
-            + " dictionary."));
-    }
-    
-=======
+        solverType = "solid";
+    }    
+    else if (mesh_.foundObject<volScalarField>("p"))
+    {   
       volScalarField p_ = mesh_.lookupObject<volScalarField>("p");
 
       if (p_.dimensions() == pressureDimensionsCompressible)
@@ -151,10 +126,8 @@ std::string preciceAdapter::FSI::FluidStructureInteraction::determineSolverType(
       adapterInfo("Failed to determine the solver type. "
                   "Please specify your solver type in the FSI section of the "
                   "preciceDict. Known solver types for FSI are: "
-                  "incompressible and "
-                  "compressible",
+                  "incompressible, compressible and solid",
                   "error");
->>>>>>> Stashed changes
 
     DEBUG(adapterInfo("Automatically determined solver type : " + solverType));
 
@@ -169,11 +142,7 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
             interface->addCouplingDataWriter
             (
                 dataName,
-<<<<<<< Updated upstream
-                new Force(mesh_, runTime_.timeName(), solverType_, solidForces_) /* TODO: Add any other arguments here */
-=======
-                new Force(mesh_, runTime_.timeName(), solverType_) /* TODO: Add any other arguments here */
->>>>>>> Stashed changes
+                new Force(mesh_, runTime_.timeName(), solverType_, porousForces_) /* TODO: Add any other arguments here */
             );
             DEBUG(adapterInfo("Added writer: Force."));        
     }    
@@ -182,7 +151,7 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
         interface->addCouplingDataWriter
         (
             dataName,
-            new DisplacementDelta(mesh_, namePointDisplacement_)
+            new DisplacementDelta(mesh_, nameDPointDisplacement_)
         );
         DEBUG(adapterInfo("Added writer: DisplacementDelta."));
     }
@@ -195,8 +164,7 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
         );
         DEBUG(adapterInfo("Added writer: Displacement."));
     }
-<<<<<<< Updated upstream
-    else if (dataName.find("Displacement") == 0)
+    else if (dataName.find("volDisplacement") == 0)
     {
         interface->addCouplingDataWriter
         (
@@ -204,8 +172,8 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
             new volDisplacement(mesh_, nameCellDisplacement_)
         );
         DEBUG(adapterInfo("Added writer: volDisplacement."));
-    }
-    else if (dataName.find("DisplacementDelta") == 0)
+    }    
+    else if (dataName.find("volDisplacementDelta") == 0)
     {
         interface->addCouplingDataWriter
         (
@@ -213,16 +181,15 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
             new volDisplacementDelta(mesh_, nameDCellDisplacement_)
         );
         DEBUG(adapterInfo("Added writer: volDisplacementDelta."));
-=======
+    }
     else if(dataName.find("Stress") == 0)
     {
-      interface->addCouplingDataWriter
-          (
-              dataName,
-              new Stress(mesh_, runTime_.timeName(), solverType_) /* TODO: Add any other arguments here */
-              );
-      DEBUG(adapterInfo("Added writer: Stress."));
->>>>>>> Stashed changes
+        interface->addCouplingDataWriter
+        (
+            dataName,
+            new Stress(mesh_, runTime_.timeName(), solverType_) /* TODO: Add any other arguments here */
+        );
+        DEBUG(adapterInfo("Added writer: Stress."));
     }
 
     // NOTE: If you want to couple another variable, you need
@@ -239,11 +206,7 @@ void preciceAdapter::FSI::FluidStructureInteraction::addReaders(std::string data
         interface->addCouplingDataReader
         (
             dataName,
-<<<<<<< Updated upstream
-            new Force(mesh_, runTime_.timeName(), solverType_, solidForces_) /* TODO: Add any other arguments here */
-=======
-            new Force(mesh_, runTime_.timeName(), solverType_) /* TODO: Add any other arguments here */
->>>>>>> Stashed changes
+            new Force(mesh_, runTime_.timeName(), solverType_, porousForces_) /* TODO: Add any other arguments here */
         );
         DEBUG(adapterInfo("Added reader: Force."));
     }
@@ -252,7 +215,7 @@ void preciceAdapter::FSI::FluidStructureInteraction::addReaders(std::string data
         interface->addCouplingDataReader
         (
             dataName,
-            new DisplacementDelta(mesh_, namePointDisplacement_)
+            new DisplacementDelta(mesh_, nameDPointDisplacement_)
         );
         DEBUG(adapterInfo("Added reader: DisplacementDelta."));
     }
@@ -264,6 +227,24 @@ void preciceAdapter::FSI::FluidStructureInteraction::addReaders(std::string data
             new Displacement(mesh_, namePointDisplacement_)
         );
         DEBUG(adapterInfo("Added reader: Displacement."));
+    }
+    else if (dataName.find("volDisplacementDelta") == 0)
+    {
+        interface->addCouplingDataReader
+        (
+            dataName,
+            new volDisplacementDelta(mesh_, nameDCellDisplacement_)
+        );
+        DEBUG(adapterInfo("Added reader: volDisplacementDelta."));
+    }
+    else if (dataName.find("volDisplacement") == 0)
+    {
+        interface->addCouplingDataReader
+        (
+            dataName,
+            new volDisplacement(mesh_, nameCellDisplacement_)
+        );
+        DEBUG(adapterInfo("Added reader: volDisplacement."));
     }
     else if(dataName.find("Stress") == 0)
     {

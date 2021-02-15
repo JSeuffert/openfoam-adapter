@@ -34,6 +34,7 @@ public:
 
     //- Read the displacement values from the buffer
     void read(double * buffer, const unsigned int dim);
+
 };
 
 }

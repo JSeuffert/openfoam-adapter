@@ -5,6 +5,8 @@
 
 #include "FSI/Displacement.H"
 #include "FSI/DisplacementDelta.H"
+#include "FSI/volDisplacement.H"
+#include "FSI/volDisplacementDelta.H"
 #include "FSI/Force.H"
 #include "FSI/Stress.H"
 
@@ -29,9 +31,8 @@ protected:
     //- Solver type
     std::string solverType_ = "none";
     
-<<<<<<< Updated upstream
     //- Solid Forces
-    bool solidForces_ = false;
+    bool porousForces_ = false;
     
     //- Name of the transportProperties dictionary
     std::string nameTransportProperties_ = "transportProperties";
@@ -39,10 +40,17 @@ protected:
     //- Name of the rheologyProperties dictionary
     std::string nameRheologyProperties_ = "rheologyProperties";
 
-=======
->>>>>>> Stashed changes
     //- Name of the pointDisplacement field
     std::string namePointDisplacement_ = "pointDisplacement";
+    
+    //- Name of the DpointDisplacement field
+    std::string nameDPointDisplacement_ = "DpointDisplacement";
+    
+    //- Name of the pointDisplacement field
+    std::string nameCellDisplacement_ = "cellDisplacement";
+    
+    //- Name of the DpointDisplacement field
+    std::string nameDCellDisplacement_ = "DcellDisplacement";
 
     /* TODO: Declare here any parameters that should be read from
     /  the configuration file. See CHT/CHT.H for reference.

@@ -27,11 +27,13 @@ void preciceAdapter::FSI::volDisplacement::write(double * buffer, bool meshConne
         int patchID = patchIDs_.at(j);
         
         // Get the displacement on the patch
-        fixedValueFvPatchVectorField& cellDisplacementFluidPatch =
+        fixedValueFvPatchVectorField& cellDisplacementFluidPatch
+        (
             refCast<fixedValueFvPatchVectorField>
             (
                 cellDisplacement_->boundaryFieldRef()[patchID]
-            );
+            )
+        );
         
         // Write the displacements to the preCICE buffer
         // For every cell of the patch
@@ -69,11 +71,13 @@ void preciceAdapter::FSI::volDisplacement::read(double * buffer, const unsigned 
         int patchID = patchIDs_.at(j);
 
         // Get the displacement on the patch
-        fixedValueFvPatchVectorField& cellDisplacementFluidPatch =
+        fixedValueFvPatchVectorField& cellDisplacementFluidPatch
+        (
             refCast<fixedValueFvPatchVectorField>
             (
                 cellDisplacement_->boundaryFieldRef()[patchID]
-            );
+            )
+        );
 
         // For every cell of the patch
         forAll(cellDisplacement_->boundaryFieldRef()[patchID], i)

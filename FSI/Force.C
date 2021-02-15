@@ -10,6 +10,7 @@ preciceAdapter::FSI::Force::Force
 :
 mesh_(mesh),
 solverType_(solverType),
+porousForces_(false),
 force_field_created(false)
 {}
 
@@ -18,12 +19,8 @@ preciceAdapter::FSI::Force::Force
 (
     const Foam::fvMesh& mesh,
     const fileName& timeName,
-<<<<<<< Updated upstream
     const std::string solverType,
-    const bool solidForces
-=======
-    const std::string solverType
->>>>>>> Stashed changes
+    const bool porousForces
     /* TODO: We should add any required field names here.
     /  They would need to be vector fields.
     /  See FSI/Temperature.C for details.
@@ -32,18 +29,16 @@ preciceAdapter::FSI::Force::Force
 :
 mesh_(mesh),
 solverType_(solverType),
-<<<<<<< Updated upstream
-solidForces_(solidForces)
-=======
+porousForces_(porousForces),
 force_field_created(true)
->>>>>>> Stashed changes
 {
     //What about type "basic"?
-    if (solverType_.compare("incompressible") != 0 && solverType_.compare("compressible") != 0) 
+    if (solverType_.compare("incompressible") != 0 &&                                                   solverType_.compare("compressible") != 0 && 
+    solverType_.compare("solid") != 0) 
     {
         FatalErrorInFunction
             << "Forces calculation does only support "
-            << "compressible or incompressible solver type."
+            << "compressible, incompressible or solid solver type."
             << exit(FatalError);
     }
     
@@ -67,15 +62,18 @@ force_field_created(true)
             Foam::vector::zero
         )
     );
-<<<<<<< Updated upstream
+}
+
+//Calculate solid force
+Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devSigmaEff() const
+{
+    return mesh_.lookupObject<volSymmTensorField>("sigma");
 }
 
 //Calculate solid force
 Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devSigma() const
 {
-    return mesh_.lookupObject<volSymmTensorField>("sigma");
-=======
->>>>>>> Stashed changes
+    return mesh_.lookupObject<volSymmTensorField>("sigmaTot");
 }
 
 //Calculate viscous force
@@ -86,49 +84,30 @@ Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devRhoReff() con
     typedef incompressible::turbulenceModel icoTurbModel;   
     
     if (mesh_.foundObject<cmpTurbModel>(cmpTurbModel::propertiesName))
-<<<<<<< Updated upstream
-    {        
-        const cmpTurbModel& turb =
-            mesh_.lookupObject<cmpTurbModel>(cmpTurbModel::propertiesName);    
-        
-=======
     {
         const cmpTurbModel & turb
         (
             mesh_.lookupObject<cmpTurbModel>(cmpTurbModel::propertiesName)
         );
 
->>>>>>> Stashed changes
         return turb.devRhoReff();
-
     }    
     else if (mesh_.foundObject<icoTurbModel>(icoTurbModel::propertiesName))
-<<<<<<< Updated upstream
-    {        
-        const incompressible::turbulenceModel& turb =
-            mesh_.lookupObject<icoTurbModel>(icoTurbModel::propertiesName);
-            
-=======
-    {
+    {       
         const incompressible::turbulenceModel& turb
         (
             mesh_.lookupObject<icoTurbModel>(icoTurbModel::propertiesName)
         );
 
->>>>>>> Stashed changes
         return rho()*turb.devReff();        
     }
     else
     {        
         // For laminar flows get the velocity  
-<<<<<<< Updated upstream
-        const volVectorField& U = mesh_.lookupObject<volVectorField>("U");
-=======
         const volVectorField & U
         (
             mesh_.lookupObject<volVectorField>("U")
         );
->>>>>>> Stashed changes
         
         return -mu()*dev(twoSymm(fvc::grad(U)));
     }
@@ -186,15 +165,10 @@ Foam::tmp<Foam::volScalarField> preciceAdapter::FSI::Force::mu() const
         typedef immiscibleIncompressibleTwoPhaseMixture iitpMixture;
         if (mesh_.foundObject<iitpMixture>("mixture"))
         {
-<<<<<<< Updated upstream
-            const iitpMixture& mixture =
-                mesh_.lookupObject<iitpMixture>("mixture");
-=======
             const iitpMixture& mixture
             (
                 mesh_.lookupObject<iitpMixture>("mixture")
             );
->>>>>>> Stashed changes
                 
             return mixture.mu();
         }
@@ -241,17 +215,11 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
     );
 
     // Stress tensor boundary field
-<<<<<<< Updated upstream
-    tmp<volSymmTensorField> tdevRhoReff = devRhoReff();
-    const volSymmTensorField::Boundary& devRhoReffb =
-        tdevRhoReff().boundaryField();
-=======
     tmp<volSymmTensorField> tdevRhoReff(devRhoReff());
     const volSymmTensorField::Boundary& devRhoReffb
     (
         tdevRhoReff().boundaryField()
     );
->>>>>>> Stashed changes
 
     // Density boundary field
     tmp<volScalarField> trho(rho());
@@ -260,15 +228,10 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
 
     // Pressure boundary field
     tmp<volScalarField> tp = mesh_.lookupObject<volScalarField>("p");
-<<<<<<< Updated upstream
-    const volScalarField::Boundary& pb =
-        tp().boundaryField();        
-=======
     const volScalarField::Boundary& pb
     (
         tp().boundaryField()
     );
->>>>>>> Stashed changes
 
     int bufferIndex = 0;
     // For every boundary patch of the interface
@@ -276,55 +239,57 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
     {
 
         int patchID = patchIDs_.at(j);
-
-<<<<<<< Updated upstream
         
-        
-        //pressure forces
-=======
-        // Pressure forces
->>>>>>> Stashed changes
-        if (solverType_.compare("incompressible") == 0)
+        if (solverType_.compare("solid") == 0)
         {
-            Force_->boundaryFieldRef()[patchID] =
-                Sfb[patchID] * pb[patchID] * rhob[patchID];
-        }
-        else if (solverType_.compare("compressible") == 0)
-        {
-            Force_->boundaryFieldRef()[patchID] =
-<<<<<<< Updated upstream
-                Sfb[patchID] * (pb[patchID] - 1.0e5);
+            tmp<volSymmTensorField> tdevSigma(devSigma());
+            const volSymmTensorField::Boundary& devSigmab
+            (
+                tdevSigma().boundaryField()
+            );
+                
+            Force_->boundaryFieldRef()[patchID] = 
+                    Sfb[patchID] & devSigmab[patchID];
         }
         else
         {
-            FatalErrorInFunction
-                << "Forces calculation does only support "
-                << "compressible or incompressible solver type."
-                << exit(FatalError);
-        }
-        
-        //Solid forces
-        if (solidForces_ == true)
-=======
-                Sfb[patchID] * pb[patchID];
-        }
-        else
->>>>>>> Stashed changes
-        {
-            FatalErrorInFunction
-                << "Forces calculation does only support "
-                << "compressible or incompressible solver type."
-                << exit(FatalError);
-        }
-        
-        // Viscous forces
-        Force_->boundaryFieldRef()[patchID] +=
-            Sfb[patchID] & devRhoReffb[patchID];
-<<<<<<< Updated upstream
+            // Pressure forces
+            if (solverType_.compare("incompressible") == 0)
+            {
+                Force_->boundaryFieldRef()[patchID] =
+                    Sfb[patchID] * pb[patchID] * rhob[patchID];
+            }
+            else if (solverType_.compare("compressible") == 0)
+            {
+                Force_->boundaryFieldRef()[patchID] =
+                    Sfb[patchID] * (pb[patchID] - 1.0e5);
+            }
+            else
+            {
+                FatalErrorInFunction
+                    << "Forces calculation does only support "
+                    << "compressible or incompressible solver type."
+                    << exit(FatalError);
+            }
             
-=======
-
->>>>>>> Stashed changes
+            //Solid forces
+            if (porousForces_ == true)
+            {
+                tmp<volSymmTensorField> tdevSigma(devSigmaEff());
+                const volSymmTensorField::Boundary& devSigmab
+                (
+                    tdevSigma().boundaryField()
+                );
+                
+                Force_->boundaryFieldRef()[patchID] += 
+                    Sfb[patchID] & devSigmab[patchID];
+            }
+            
+            // Viscous forces
+            Force_->boundaryFieldRef()[patchID] +=
+                Sfb[patchID] & devRhoReffb[patchID];
+        }
+        
         // Write the forces to the preCICE buffer
         // For every cell of the patch
         forAll(Force_->boundaryFieldRef()[patchID], i)
@@ -343,20 +308,14 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
             if(dim == 3)
                 // z-dimension
                 buffer[bufferIndex++]
-<<<<<<< Updated upstream
-                =
-                Force_->boundaryFieldRef()[patchID][i].z();
-=======
                         =
                         Force_->boundaryFieldRef()[patchID][i].z();
->>>>>>> Stashed changes
         }
     }
 }
 
 void preciceAdapter::FSI::Force::read(double * buffer, const unsigned int dim)
 {
-<<<<<<< Updated upstream
     // For every element in the buffer
     int bufferIndex = 0;
 
@@ -383,16 +342,6 @@ void preciceAdapter::FSI::Force::read(double * buffer, const unsigned int dim)
             
         }
     }
-=======
-    /* TODO: Implement
-    * We need two nested for-loops for each patch,
-    * the outer for the locations and the inner for the dimensions.
-    * See the preCICE readBlockVectorData() implementation.
-    */
-    FatalErrorInFunction
-        << "Reading forces is not supported."
-        << exit(FatalError);
->>>>>>> Stashed changes
 }
 
 preciceAdapter::FSI::Force::~Force()

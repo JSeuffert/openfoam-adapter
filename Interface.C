@@ -227,9 +227,9 @@ void preciceAdapter::Interface::configureMesh(const fvMesh& mesh)
 
 void preciceAdapter::Interface::addCouplingDataWriter
 (
-        std::string dataName,
-        CouplingDataUser * couplingDataWriter
-        )
+    std::string dataName,
+    preciceAdapter::CouplingDataUser * couplingDataWriter
+)
 {
     // Set the dataID (from preCICE)
     couplingDataWriter->setDataID(precice_.getDataID(dataName, meshID_));
@@ -244,9 +244,9 @@ void preciceAdapter::Interface::addCouplingDataWriter
 
 void preciceAdapter::Interface::addCouplingDataReader
 (
-        std::string dataName,
-        preciceAdapter::CouplingDataUser * couplingDataReader
-        )
+    std::string dataName,
+    preciceAdapter::CouplingDataUser * couplingDataReader
+)
 {
     // Set the patchIDs of the patches that form the interface
     couplingDataReader->setDataID(precice_.getDataID(dataName, meshID_));

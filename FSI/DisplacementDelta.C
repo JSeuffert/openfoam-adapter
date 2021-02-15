@@ -27,11 +27,13 @@ void preciceAdapter::FSI::DisplacementDelta::write(double * buffer, bool meshCon
         int patchID = patchIDs_.at(j);
         
         // Get the displacement on the patch
-        fixedValuePointPatchVectorField& DpointDisplacementFluidPatch =
+        fixedValuePointPatchVectorField& DpointDisplacementFluidPatch
+        (
             refCast<fixedValuePointPatchVectorField>
             (
                 DpointDisplacement_->boundaryFieldRef()[patchID]
-            );
+            )
+        );
         
         // Write the displacements to the preCICE buffer
         // For every cell of the patch
@@ -69,20 +71,22 @@ void preciceAdapter::FSI::DisplacementDelta::read(double * buffer, const unsigne
         int patchID = patchIDs_.at(j);
 
         // Get the displacement on the patch
-        fixedValuePointPatchVectorField& pointDisplacementFluidPatch =
+        fixedValuePointPatchVectorField& DpointDisplacementFluidPatch
+        (
             refCast<fixedValuePointPatchVectorField>
             (
                 DpointDisplacement_->boundaryFieldRef()[patchID]
-            );
+            )
+        );
 
         // For every cell of the patch
         forAll(DpointDisplacement_->boundaryFieldRef()[patchID], i)
         {
             // Set the displacementDeltas to the received one
-            pointDisplacementFluidPatch[i][0] = buffer[bufferIndex++];
-            pointDisplacementFluidPatch[i][1] = buffer[bufferIndex++];
+            DpointDisplacementFluidPatch[i][0] = buffer[bufferIndex++];
+            DpointDisplacementFluidPatch[i][1] = buffer[bufferIndex++];
             if(dim == 3)
-                pointDisplacementFluidPatch[i][2] = buffer[bufferIndex++];
+                DpointDisplacementFluidPatch[i][2] = buffer[bufferIndex++];
         }
     }
 }

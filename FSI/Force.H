@@ -24,24 +24,21 @@ private:
 
     //- OpenFOAM fvMesh object (we need to access the objects' registry multiple times)
     const Foam::fvMesh& mesh_;
-<<<<<<< Updated upstream
     
     const std::string solverType_;
-=======
->>>>>>> Stashed changes
-    
-    const std::string solverType_;
-
+   
     //- Force field
     Foam::volVectorField * Force_;
-<<<<<<< Updated upstream
+    
+    //- Solid stress tensor
+    Foam::tmp<Foam::volSymmTensorField> devSigmaEff() const;
     
     //- Solid stress tensor
     Foam::tmp<Foam::volSymmTensorField> devSigma() const;
-=======
->>>>>>> Stashed changes
 
     // Needed for inheritance to the Stress data field to avoid creating the Force
+    const bool porousForces_;
+    
     // field in case it is not required
     const bool force_field_created;
 
@@ -61,12 +58,9 @@ public:
     (
         const Foam::fvMesh& mesh,
         const fileName& timeName,
-<<<<<<< Updated upstream
         const std::string solverType,
         const bool solidForces
-=======
-        const std::string solverType
->>>>>>> Stashed changes
+
         // We create an IOobject and we need the time directory
         /* TODO: We should add any required field names here.
         /  They would need to be vector fields.
