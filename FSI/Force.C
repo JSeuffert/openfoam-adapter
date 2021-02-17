@@ -51,7 +51,7 @@ force_field_created(true)
             "Force",
             timeName,
             mesh,
-            IOobject::NO_READ,
+            IOobject::READ_IF_PRESENT,
             IOobject::AUTO_WRITE
         ),
         mesh,
@@ -311,6 +311,7 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
                         =
                         Force_->boundaryFieldRef()[patchID][i].z();
         }
+        //Info << (Force_->boundaryFieldRef()[patchID]) << endl;
     }
 }
 
@@ -325,8 +326,8 @@ void preciceAdapter::FSI::Force::read(double * buffer, const unsigned int dim)
         int patchID = patchIDs_.at(j);
 
         // Get the force on the patch
-        fixedValueFvPatchVectorField& ForcePatch =
-            refCast<fixedValueFvPatchVectorField>
+        fvPatchVectorField& ForcePatch =
+            refCast<fvPatchVectorField>
             (
                 Force_->boundaryFieldRef()[patchID]
             );
@@ -341,6 +342,8 @@ void preciceAdapter::FSI::Force::read(double * buffer, const unsigned int dim)
                 ForcePatch[i][2] = buffer[bufferIndex++];
             
         }
+        
+        //Info << (Force_->boundaryFieldRef()[patchID]) << endl;
     }
 }
 

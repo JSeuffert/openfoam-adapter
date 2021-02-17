@@ -59,39 +59,28 @@ bool preciceAdapter::FSI::FluidStructureInteraction::readConfig(const IOdictiona
     /* TODO: Read the names of any needed fields and parameters.
     * Include the force here?
     */
-    // Read the solid forces
-    if (adapterConfig["porousForces"])
-    {
-        porousForces_ = FSIdict.lookupOrDefault<bool>("porousForces", false);
-    }
+    // Read the porous forces    
+    porousForces_ = FSIdict.lookupOrDefault<bool>("porousForces", false);    
     DEBUG(adapterInfo("    add porous forces : " + std::to_string(porousForces_)));   
 
     // Read the name of the pointDisplacement field (if different)
-    if (adapterConfig["namePointDisplacement"])
-    {
-        namePointDisplacement_ = FSIdict.lookupOrDefault<word>("namePointDisplacement", "pointDisplacement");
-    }
+    
+    namePointDisplacement_ = FSIdict.lookupOrDefault<word>("namePointDisplacement", "pointDisplacement");    
     DEBUG(adapterInfo("    pointDisplacement field name : " + namePointDisplacement_));
     
     // Read the name of the pointDisplacement field (if different)
-    if (adapterConfig["nameDPointDisplacement"])
-    {
-        nameDPointDisplacement_ = FSIdict.lookupOrDefault<word>("nameDPointDisplacement", "DpointDisplacement");
-    }
+    
+    nameDPointDisplacement_ = FSIdict.lookupOrDefault<word>("nameDPointDisplacement", "DpointDisplacement");
     DEBUG(adapterInfo("    DpointDisplacement field name : " + nameDPointDisplacement_));
     
     // Read the name of the cellDisplacement field (if different)
-    if (adapterConfig["nameCellDisplacement"])
-    {
-        nameCellDisplacement_ = FSIdict.lookupOrDefault<word>("nameCellDisplacement", "cellDisplacement");
-    }
+    
+    nameCellDisplacement_ = FSIdict.lookupOrDefault<word>("nameCellDisplacement", "cellDisplacement");    
     DEBUG(adapterInfo("    cellDisplacement field name : " + nameCellDisplacement_));
     
     // Read the name of the cellDisplacement field (if different)
-    if (adapterConfig["nameDCellDisplacement"])
-    {
-        nameDCellDisplacement_ = FSIdict.lookupOrDefault<word>("nameDCellDisplacement", "DcellDisplacement");
-    }
+    
+    nameDCellDisplacement_ = FSIdict.lookupOrDefault<word>("nameDCellDisplacement", "DcellDisplacement");    
     DEBUG(adapterInfo("    DcellDisplacement field name : " + nameDCellDisplacement_));
 
     return true;
@@ -108,11 +97,13 @@ std::string preciceAdapter::FSI::FluidStructureInteraction::determineSolverType(
     dimensionSet pressureDimensionsCompressible(1, -1, -2, 0, 0, 0, 0);
     dimensionSet pressureDimensionsIncompressible(0, 2, -2, 0, 0, 0, 0);
 
+    /*
     if (mesh_.foundObject<IOdictionary>("rheologyProperties"))
     {
         solverType = "solid";
     }    
-    else if (mesh_.foundObject<volScalarField>("p"))
+    */
+    if (mesh_.foundObject<volScalarField>("p"))
     {   
       volScalarField p_ = mesh_.lookupObject<volScalarField>("p");
 

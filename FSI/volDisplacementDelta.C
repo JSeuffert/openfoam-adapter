@@ -27,9 +27,9 @@ void preciceAdapter::FSI::volDisplacementDelta::write(double * buffer, bool mesh
         int patchID = patchIDs_.at(j);
         
         // Get the displacement on the patch
-        fixedValueFvPatchVectorField& DcellDisplacementFluidPatch
+        fvPatchVectorField& DcellDisplacementFluidPatch
         (
-            refCast<fixedValueFvPatchVectorField>
+            refCast<fvPatchVectorField>
             (
                 DcellDisplacement_->boundaryFieldRef()[patchID]
             )
@@ -56,6 +56,8 @@ void preciceAdapter::FSI::volDisplacementDelta::write(double * buffer, bool mesh
                 =
                 DcellDisplacementFluidPatch[i][2];
         }
+        
+        //Info << (DcellDisplacement_->boundaryFieldRef()[patchID]) << endl;
     }
 }
 
@@ -71,9 +73,9 @@ void preciceAdapter::FSI::volDisplacementDelta::read(double * buffer, const unsi
         int patchID = patchIDs_.at(j);
 
         // Get the displacementDelta on the patch
-        fixedValueFvPatchVectorField& DcellDisplacementFluidPatch
+        fvPatchVectorField& DcellDisplacementFluidPatch
         (
-            refCast<fixedValueFvPatchVectorField>
+            refCast<fvPatchVectorField>
             (
                 DcellDisplacement_->boundaryFieldRef()[patchID]
             )
@@ -88,5 +90,7 @@ void preciceAdapter::FSI::volDisplacementDelta::read(double * buffer, const unsi
             if(dim == 3)
                 DcellDisplacementFluidPatch[i][2] = buffer[bufferIndex++];
         }
+        
+        //Info << (DcellDisplacement_->boundaryFieldRef()[patchID]) << endl;
     }
 }
