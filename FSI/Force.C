@@ -311,7 +311,6 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
                         =
                         Force_->boundaryFieldRef()[patchID][i].z();
         }
-        //Info << (Force_->boundaryFieldRef()[patchID]) << endl;
     }
 }
 
@@ -342,8 +341,6 @@ void preciceAdapter::FSI::Force::read(double * buffer, const unsigned int dim)
                 ForcePatch[i][2] = buffer[bufferIndex++];
             
         }
-        
-        //Info << (Force_->boundaryFieldRef()[patchID]) << endl;
     }
 }
 

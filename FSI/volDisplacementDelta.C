@@ -20,7 +20,9 @@ DcellDisplacement_(
 
 void preciceAdapter::FSI::volDisplacementDelta::write(double * buffer, bool meshConnectivity, const unsigned int dim)
 {
+    // For every element in the buffer    
     int bufferIndex = 0;
+    
     // For every boundary patch of the interface
     for (uint j = 0; j < patchIDs_.size(); j++)
     {
@@ -56,14 +58,12 @@ void preciceAdapter::FSI::volDisplacementDelta::write(double * buffer, bool mesh
                 =
                 DcellDisplacementFluidPatch[i][2];
         }
-        
-        //Info << (DcellDisplacement_->boundaryFieldRef()[patchID]) << endl;
     }
 }
 
 // return the displacement to use later in the velocity?
 void preciceAdapter::FSI::volDisplacementDelta::read(double * buffer, const unsigned int dim)
-{
+{    
     // For every element in the buffer
     int bufferIndex = 0;
 
@@ -90,7 +90,5 @@ void preciceAdapter::FSI::volDisplacementDelta::read(double * buffer, const unsi
             if(dim == 3)
                 DcellDisplacementFluidPatch[i][2] = buffer[bufferIndex++];
         }
-        
-        //Info << (DcellDisplacement_->boundaryFieldRef()[patchID]) << endl;
     }
 }

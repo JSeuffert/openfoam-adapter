@@ -155,15 +155,6 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
         );
         DEBUG(adapterInfo("Added writer: Displacement."));
     }
-    else if (dataName.find("volDisplacement") == 0)
-    {
-        interface->addCouplingDataWriter
-        (
-            dataName,
-            new volDisplacement(mesh_, nameCellDisplacement_)
-        );
-        DEBUG(adapterInfo("Added writer: volDisplacement."));
-    }    
     else if (dataName.find("volDisplacementDelta") == 0)
     {
         interface->addCouplingDataWriter
@@ -172,6 +163,15 @@ void preciceAdapter::FSI::FluidStructureInteraction::addWriters(std::string data
             new volDisplacementDelta(mesh_, nameDCellDisplacement_)
         );
         DEBUG(adapterInfo("Added writer: volDisplacementDelta."));
+    }    
+    else if (dataName.find("volDisplacement") == 0)
+    {
+        interface->addCouplingDataWriter
+        (
+            dataName,
+            new volDisplacement(mesh_, nameCellDisplacement_)
+        );
+        DEBUG(adapterInfo("Added writer: volDisplacement."));
     }
     else if(dataName.find("Stress") == 0)
     {
