@@ -65,9 +65,9 @@ force_field_created(true)
 }
 
 //Calculate solid force
-Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devSigmaEff() const
+Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devDSigma() const
 {
-    return mesh_.lookupObject<volSymmTensorField>("sigma");
+    return mesh_.lookupObject<volSymmTensorField>("DSigma");
 }
 
 //Calculate solid force
@@ -247,9 +247,15 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
             (
                 tdevSigma().boundaryField()
             );
+            
+            tmp<volSymmTensorField> tdevDSigma(devDSigma());
+            const volSymmTensorField::Boundary& devDSigmab
+            (
+                tdevDSigma().boundaryField()
+            );
                 
             Force_->boundaryFieldRef()[patchID] = 
-                    Sfb[patchID] & devSigmab[patchID];
+                    - Sfb[patchID] & (devSigmab[patchID] + devDSigmab[patchID]);
         }
         else
         {
@@ -275,19 +281,25 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
             //Solid forces
             if (porousForces_ == true)
             {
-                tmp<volSymmTensorField> tdevSigma(devSigmaEff());
+                tmp<volSymmTensorField> tdevSigma(devSigma());
                 const volSymmTensorField::Boundary& devSigmab
                 (
                     tdevSigma().boundaryField()
                 );
                 
-                Force_->boundaryFieldRef()[patchID] += 
-                    Sfb[patchID] & devSigmab[patchID];
+                tmp<volSymmTensorField> tdevDSigma(devDSigma());
+                const volSymmTensorField::Boundary& devDSigmab
+                (
+                    tdevDSigma().boundaryField()
+                );
+                
+                Force_->boundaryFieldRef()[patchID] -= 
+                    Sfb[patchID] & (devSigmab[patchID] + devDSigmab[patchID]);                
             }
             
             // Viscous forces
             Force_->boundaryFieldRef()[patchID] +=
-                Sfb[patchID] & devRhoReffb[patchID];
+                Sfb[patchID] & devRhoReffb[patchID];            
         }
         
         // Write the forces to the preCICE buffer

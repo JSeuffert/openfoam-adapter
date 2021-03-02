@@ -31,7 +31,7 @@ private:
     Foam::volVectorField * Force_;
     
     //- Solid stress tensor
-    Foam::tmp<Foam::volSymmTensorField> devSigmaEff() const;
+    Foam::tmp<Foam::volSymmTensorField> devDSigma() const;
     
     //- Solid stress tensor
     Foam::tmp<Foam::volSymmTensorField> devSigma() const;
