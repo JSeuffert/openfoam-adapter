@@ -30,12 +30,6 @@ private:
     //- Force field
     Foam::volVectorField * Force_;
     
-    //- Solid stress tensor
-    Foam::tmp<Foam::volSymmTensorField> devDSigma() const;
-    
-    //- Solid stress tensor
-    Foam::tmp<Foam::volSymmTensorField> devSigma() const;
-
     // Needed for inheritance to the Stress data field to avoid creating the Force
     const bool porousForces_;
     
@@ -49,6 +43,14 @@ protected:
     Foam::tmp<Foam::volScalarField> rho() const;
     
     Foam::tmp<Foam::volScalarField> mu() const;
+    
+   //- Solid stress tensor
+    Foam::tmp<Foam::volSymmTensorField> devSigma() const;
+    
+    bool porousForces() const
+    {
+        return porousForces_;
+    };
 
 
 public:
@@ -81,6 +83,8 @@ public:
 
     //- Read the forces values from the buffer
     void read(double * buffer, const unsigned int dim);
+    
+    
 
     //- Destructor
     ~Force();

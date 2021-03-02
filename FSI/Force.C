@@ -65,12 +65,6 @@ force_field_created(true)
 }
 
 //Calculate solid force
-Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devDSigma() const
-{
-    return mesh_.lookupObject<volSymmTensorField>("DSigma");
-}
-
-//Calculate solid force
 Foam::tmp<Foam::volSymmTensorField> preciceAdapter::FSI::Force::devSigma() const
 {
     return mesh_.lookupObject<volSymmTensorField>("sigmaTot");
@@ -246,16 +240,10 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
             const volSymmTensorField::Boundary& devSigmab
             (
                 tdevSigma().boundaryField()
-            );
-            
-            tmp<volSymmTensorField> tdevDSigma(devDSigma());
-            const volSymmTensorField::Boundary& devDSigmab
-            (
-                tdevDSigma().boundaryField()
-            );
-                
+            );            
+                            
             Force_->boundaryFieldRef()[patchID] = 
-                    - Sfb[patchID] & (devSigmab[patchID] + devDSigmab[patchID]);
+                    - Sfb[patchID] & devSigmab[patchID];
         }
         else
         {
@@ -285,16 +273,10 @@ void preciceAdapter::FSI::Force::write(double * buffer, bool meshConnectivity, c
                 const volSymmTensorField::Boundary& devSigmab
                 (
                     tdevSigma().boundaryField()
-                );
-                
-                tmp<volSymmTensorField> tdevDSigma(devDSigma());
-                const volSymmTensorField::Boundary& devDSigmab
-                (
-                    tdevDSigma().boundaryField()
-                );
-                
+                );                
+                                
                 Force_->boundaryFieldRef()[patchID] -= 
-                    Sfb[patchID] & (devSigmab[patchID] + devDSigmab[patchID]);                
+                    Sfb[patchID] & devSigmab[patchID];                
             }
             
             // Viscous forces

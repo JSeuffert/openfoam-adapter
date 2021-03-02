@@ -34,7 +34,6 @@ private:
     //- Stress field
     Foam::volVectorField * Stress_;
 
-
 public:
 
     //- Constructor

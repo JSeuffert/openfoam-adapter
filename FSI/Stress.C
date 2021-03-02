@@ -17,11 +17,12 @@ Force(mesh,solverType),
 mesh_(mesh),
 solverType_(solverType)
 {
-    if (solverType_.compare("incompressible") != 0 && solverType_.compare("compressible") != 0)
+    if (solverType_.compare("incompressible") != 0 && solverType_.compare("compressible") != 0 && 
+    solverType_.compare("solid") != 0) 
     {
         FatalErrorInFunction
             << "Stresses calculation only supports "
-            << "compressible or incompressible solver type."
+            << "compressible, incompressible or solid solver type."
             << exit(FatalError);
     }
     
@@ -82,28 +83,55 @@ void preciceAdapter::FSI::Stress::write(double * buffer, bool meshConnectivity, 
         // Compute normal vectors on each patch
         const vectorField nV = mesh_.boundary()[patchID].nf();
 
-        // Pressure constribution
-        if (solverType_.compare("incompressible") == 0)
+        if (solverType_.compare("solid") == 0)
         {
-            Stress_->boundaryFieldRef()[patchID] =
-                nV * pb[patchID] * rhob[patchID];
-        }
-        else if (solverType_.compare("compressible") == 0)
-        {
-            Stress_->boundaryFieldRef()[patchID] =
-                nV * pb[patchID];
+            tmp<volSymmTensorField> tdevSigma(this->devSigma());
+            const volSymmTensorField::Boundary& devSigmab
+            (
+                tdevSigma().boundaryField()
+            );
+                
+            Stress_->boundaryFieldRef()[patchID] = 
+                    - nV & devSigmab[patchID];
         }
         else
         {
-            FatalErrorInFunction
-                << "Stress calculation does only support "
-                << "compressible or incompressible solver type."
-                << exit(FatalError);
+            // Pressure forces
+            if (solverType_.compare("incompressible") == 0)
+            {
+                Stress_->boundaryFieldRef()[patchID] =
+                    nV * pb[patchID] * rhob[patchID];
+            }
+            else if (solverType_.compare("compressible") == 0)
+            {
+                Stress_->boundaryFieldRef()[patchID] =
+                    nV * (pb[patchID] - 1.0e5);
+            }
+            else
+            {
+                FatalErrorInFunction
+                    << "Forces calculation does only support "
+                    << "compressible or incompressible solver type."
+                    << exit(FatalError);
+            }
+            
+            //Solid forces
+            if (this->porousForces() == true)
+            {
+                tmp<volSymmTensorField> tdevSigma(devSigma());
+                const volSymmTensorField::Boundary& devSigmab
+                (
+                    tdevSigma().boundaryField()
+                );                
+                                
+                Stress_->boundaryFieldRef()[patchID] -= 
+                    nV & devSigmab[patchID];                
+            }
+            
+            // Viscous forces
+            Stress_->boundaryFieldRef()[patchID] +=
+                nV & devRhoReffb[patchID];            
         }
-
-        // Viscous contribution
-        Stress_->boundaryFieldRef()[patchID] +=
-            nV & devRhoReffb[patchID];
 
         // Write the stress to the preCICE buffer
         // For every cell of the patch
@@ -131,14 +159,32 @@ void preciceAdapter::FSI::Stress::write(double * buffer, bool meshConnectivity, 
 
 void preciceAdapter::FSI::Stress::read(double * buffer, const unsigned int dim)
 {
-    /* TODO: Implement
-    * We need two nested for-loops for each patch,
-    * the outer for the locations and the inner for the dimensions.
-    * See the preCICE readBlockVectorData() implementation.
-    */
-    FatalErrorInFunction
-        << "Reading stresses is not supported."
-        << exit(FatalError);
+    // For every element in the buffer
+    int bufferIndex = 0;
+
+    // For every boundary patch of the interface
+    for (uint j = 0; j < patchIDs_.size(); j++)
+    {
+        int patchID = patchIDs_.at(j);
+
+        // Get the force on the patch
+        fvPatchVectorField& StressPatch =
+            refCast<fvPatchVectorField>
+            (
+                Stress_->boundaryFieldRef()[patchID]
+            );
+
+        // For every cell of the patch
+        forAll(Stress_->boundaryFieldRef()[patchID], i)
+        {
+            // Set the force to the received one
+            StressPatch[i][0] = buffer[bufferIndex++];
+            StressPatch[i][1] = buffer[bufferIndex++];
+            if(dim == 3)
+                StressPatch[i][2] = buffer[bufferIndex++];
+            
+        }
+    }
 }
 
 preciceAdapter::FSI::Stress::~Stress()
